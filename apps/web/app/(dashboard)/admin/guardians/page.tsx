@@ -68,7 +68,26 @@ export default async function GuardiansPage({ searchParams }: PageProps) {
 
             {/* Table */}
             <Suspense fallback={<div>Loading...</div>}>
-                <GuardianTable guardians={guardians} pagination={pagination} />
+                <GuardianTable
+                    guardians={guardians.map(g => ({
+                        id: g.id,
+                        occupation: g.occupation,
+                        workplace: g.workplace,
+                        user: {
+                            name: g.user.name,
+                            email: g.user.email,
+                            phone: g.user.phone,
+                        },
+                        students: g.students.map(s => ({
+                            student: {
+                                user: {
+                                    name: s.student.user.name
+                                }
+                            }
+                        }))
+                    }))}
+                    pagination={pagination}
+                />
             </Suspense>
         </div>
     );
