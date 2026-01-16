@@ -1,0 +1,923 @@
+// Database package - exports Prisma client
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+// ============================================
+// MULTI-TENANT & AUTH MODELS
+// ============================================
+
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  domain    String?  @unique
+  logo      String?
+  settings  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  branches  Branch[]
+  users     User[]
+}
+
+model Branch {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  name      String
+  code      String
+  address   String?
+  phone     String?
+  email     String?
+  isMain    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  users           User[]
+  students        Student[]
+  teachers        Teacher[]
+  staff           Staff[]
+  classes         Class[]
+  announcements   Announcement[]
+  academicYears   AcademicYear[]
+  admissionApplications AdmissionApplication[]
+  bookCategories  BookCategory[]
+  books           Book[]
+  transportRoutes TransportRoute[]
+  vehicles        Vehicle[]
+  events          Event[]
+  
+  @@unique([tenantId, code])
+}
+
+model User {
+  id            String    @id @default(cuid())
+  tenantId      String
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branchId      String?
+  branch        Branch?   @relation(fields: [branchId], references: [id])
+  
+  email         String
+  password      String
+  name          String
+  phone         String?
+  avatar        String?
+  role          Role      @default(USER)
+  type          UserType  @default(ADMIN)
+  isActive      Boolean   @default(true)
+  emailVerified DateTime?
+  lastLogin     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  student       Student?
+  teacher       Teacher?
+  staff         Staff?
+  guardian      Guardian?
+  
+  @@unique([tenantId, email])
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  BRANCH_ADMIN
+  HEAD_TEACHER
+  TEACHER
+  ACCOUNTANT
+  LIBRARIAN
+  STAFF
+  PARENT
+  STUDENT
+  USER
+}
+
+enum UserType {
+  ADMIN
+  TEACHER
+  STAFF
+  STUDENT
+  GUARDIAN
+}
+
+// ============================================
+// STUDENT & GUARDIAN MODELS
+// ============================================
+
+model Student {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branchId      String
+  branch        Branch   @relation(fields: [branchId], references: [id])
+  
+  rollNo        String?
+  admissionNo   String
+  admissionDate DateTime @default(now())
+  dateOfBirth   DateTime?
+  gender        Gender?
+  bloodGroup    String?
+  religion      String?
+  nationality   String   @default("Bangladeshi")
+  address       String?
+  previousSchool String?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  guardians     StudentGuardian[]
+  enrollments   Enrollment[]
+  attendances   Attendance[]
+  results       Result[]
+  feePayments   FeePayment[]
+  homeworkSubmissions HomeworkSubmission[]
+  bookIssues    BookIssue[]
+  transportAssignments StudentTransport[]
+  eventRegistrations EventRegistration[]
+  
+  @@unique([branchId, admissionNo])
+}
+
+model Guardian {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  occupation    String?
+  workplace     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  students      StudentGuardian[]
+  eventRegistrations EventRegistration[]
+}
+
+model StudentGuardian {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  guardianId  String
+  guardian    Guardian @relation(fields: [guardianId], references: [id], onDelete: Cascade)
+  
+  relation    GuardianRelation
+  isPrimary   Boolean  @default(false)
+  
+  @@unique([studentId, guardianId])
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum GuardianRelation {
+  FATHER
+  MOTHER
+  BROTHER
+  SISTER
+  UNCLE
+  AUNT
+  GRANDFATHER
+  GRANDMOTHER
+  OTHER
+}
+
+// ============================================
+// TEACHER & STAFF MODELS
+// ============================================
+
+model Teacher {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branchId      String
+  branch        Branch   @relation(fields: [branchId], references: [id])
+  
+  employeeId    String
+  designation   String?
+  department    String?
+  qualification String?
+  specialization String?
+  joiningDate   DateTime @default(now())
+  dateOfBirth   DateTime?
+  gender        Gender?
+  address       String?
+  salary        Float?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  subjectAssignments SubjectAssignment[]
+  timetableSlots     TimetableSlot[]
+  attendances        Attendance[]
+  classTeacherOf     Section[] @relation("ClassTeacher")
+  homework           Homework[]
+  
+  @@unique([branchId, employeeId])
+}
+
+model Staff {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branchId      String
+  branch        Branch   @relation(fields: [branchId], references: [id])
+  
+  employeeId    String
+  designation   String
+  department    String?
+  joiningDate   DateTime @default(now())
+  salary        Float?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  attendances   Attendance[]
+  
+  @@unique([branchId, employeeId])
+}
+
+// ============================================
+// ACADEMIC MODELS
+// ============================================
+
+model AcademicYear {
+  id          String   @id @default(cuid())
+  branchId    String
+  branch      Branch   @relation(fields: [branchId], references: [id])
+  
+  name        String   // e.g., "2024-2025"
+  startDate   DateTime
+  endDate     DateTime
+  isCurrent   Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  enrollments Enrollment[]
+  exams       Exam[]
+}
+
+model Class {
+  id          String   @id @default(cuid())
+  branchId    String
+  branch      Branch   @relation(fields: [branchId], references: [id])
+  
+  name        String   // e.g., "Class 1", "Class 10"
+  grade       Int      // 1-12
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  sections    Section[]
+  subjects    Subject[]
+  exams       Exam[]
+  homework    Homework[]
+  feeStructures FeeStructure[]
+}
+
+model Section {
+  id             String   @id @default(cuid())
+  classId        String
+  class          Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  
+  name           String   // e.g., "A", "B", "C"
+  capacity       Int?
+  classTeacherId String?
+  classTeacher   Teacher? @relation("ClassTeacher", fields: [classTeacherId], references: [id])
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  enrollments     Enrollment[]
+  timetableSlots  TimetableSlot[]
+  attendances     Attendance[]
+  homework        Homework[]
+}
+
+model Subject {
+  id            String   @id @default(cuid())
+  classId       String
+  class         Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  
+  name          String
+  code          String
+  creditHours   Float    @default(1)
+  isOptional    Boolean  @default(false)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  assignments       SubjectAssignment[]
+  timetableSlots    TimetableSlot[]
+  examSubjects      ExamSubject[]
+  homework          Homework[]
+}
+
+model SubjectAssignment {
+  id          String   @id @default(cuid())
+  teacherId   String
+  teacher     Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subjectId   String
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  
+  @@unique([teacherId, subjectId])
+}
+
+model Enrollment {
+  id              String   @id @default(cuid())
+  studentId       String
+  student         Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  sectionId       String
+  section         Section  @relation(fields: [sectionId], references: [id])
+  academicYearId  String
+  academicYear    AcademicYear @relation(fields: [academicYearId], references: [id])
+  
+  rollNumber      String?
+  status          EnrollmentStatus @default(ACTIVE)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([studentId, academicYearId])
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  TRANSFERRED
+  GRADUATED
+  DROPPED
+}
+
+// ============================================
+// TIMETABLE & ATTENDANCE
+// ============================================
+
+model TimetableSlot {
+  id          String   @id @default(cuid())
+  sectionId   String
+  section     Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  subjectId   String
+  subject     Subject  @relation(fields: [subjectId], references: [id])
+  teacherId   String
+  teacher     Teacher  @relation(fields: [teacherId], references: [id])
+  
+  dayOfWeek   Int      // 0-6 (Sunday-Saturday)
+  startTime   String   // "08:00"
+  endTime     String   // "08:45"
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Attendance {
+  id          String   @id @default(cuid())
+  sectionId   String?
+  section     Section? @relation(fields: [sectionId], references: [id])
+  
+  date        DateTime
+  type        AttendanceType
+  
+  // Polymorphic relation
+  studentId   String?
+  student     Student? @relation(fields: [studentId], references: [id])
+  teacherId   String?
+  teacher     Teacher? @relation(fields: [teacherId], references: [id])
+  staffId     String?
+  staff       Staff?   @relation(fields: [staffId], references: [id])
+  
+  status      AttendanceStatus @default(PRESENT)
+  remarks     String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([date, studentId])
+  @@unique([date, teacherId])
+  @@unique([date, staffId])
+}
+
+enum AttendanceType {
+  STUDENT
+  TEACHER
+  STAFF
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+  HALF_DAY
+}
+
+// ============================================
+// EXAMINATION & RESULTS
+// ============================================
+
+model Exam {
+  id              String   @id @default(cuid())
+  classId         String
+  class           Class    @relation(fields: [classId], references: [id])
+  academicYearId  String
+  academicYear    AcademicYear @relation(fields: [academicYearId], references: [id])
+  
+  name            String   // e.g., "First Term", "Half Yearly"
+  type            ExamType
+  startDate       DateTime
+  endDate         DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  examSubjects    ExamSubject[]
+  results         Result[]
+}
+
+enum ExamType {
+  FIRST_TERM
+  HALF_YEARLY
+  FINAL
+  UNIT_TEST
+  CLASS_TEST
+}
+
+model ExamSubject {
+  id          String   @id @default(cuid())
+  examId      String
+  exam        Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  subjectId   String
+  subject     Subject  @relation(fields: [subjectId], references: [id])
+  
+  fullMarks   Float
+  passMarks   Float
+  examDate    DateTime?
+  
+  @@unique([examId, subjectId])
+}
+
+model Result {
+  id          String   @id @default(cuid())
+  examId      String
+  exam        Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id])
+  
+  subjectId   String
+  marksObtained Float
+  grade       String?
+  gradePoint  Float?
+  remarks     String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([examId, studentId, subjectId])
+}
+
+// ============================================
+// FINANCE
+// ============================================
+
+model FeeHead {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "Tuition Fee", "Exam Fee"
+  amount      Float?   // Optional base amount, can be overridden by FeeStructure
+  frequency   FeeFrequency @default(MONTHLY)
+  isOptional  Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  payments    FeePayment[]
+  structures  FeeStructure[]
+}
+
+model FeeStructure {
+  id        String   @id @default(cuid())
+  classId   String
+  class     Class    @relation(fields: [classId], references: [id])
+  feeHeadId String
+  feeHead   FeeHead  @relation(fields: [feeHeadId], references: [id])
+  amount    Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([classId, feeHeadId])
+}
+
+enum FeeFrequency {
+  ONE_TIME
+  MONTHLY
+  QUARTERLY
+  HALF_YEARLY
+  YEARLY
+}
+
+model FeePayment {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id])
+  feeHeadId   String
+  feeHead     FeeHead  @relation(fields: [feeHeadId], references: [id])
+  
+  amount      Float
+  dueDate     DateTime
+  paidDate    DateTime?
+  status      PaymentStatus @default(PENDING)
+  method      PaymentMethod?
+  transactionId String?
+  remarks     String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  PARTIAL
+  OVERDUE
+  WAIVED
+}
+
+enum PaymentMethod {
+  CASH
+  BKASH
+  NAGAD
+  ROCKET
+  BANK_TRANSFER
+  CARD
+}
+
+// ============================================
+// ANNOUNCEMENTS
+// ============================================
+
+model Announcement {
+  id          String   @id @default(cuid())
+  branchId    String
+  branch      Branch   @relation(fields: [branchId], references: [id])
+  
+  title       String
+  content     String
+  type        AnnouncementType @default(GENERAL)
+  priority    Priority @default(NORMAL)
+  startDate   DateTime @default(now())
+  endDate     DateTime?
+  isPublished Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum AnnouncementType {
+  GENERAL
+  EXAM
+  EVENT
+  HOLIDAY
+  EMERGENCY
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+// ============================================
+// HOMEWORK & ASSIGNMENTS
+// ============================================
+
+model Homework {
+  id            String   @id @default(cuid())
+  classId       String
+  class         Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  sectionId     String?
+  section       Section? @relation(fields: [sectionId], references: [id])
+  subjectId     String
+  subject       Subject  @relation(fields: [subjectId], references: [id])
+  teacherId     String
+  teacher       Teacher  @relation(fields: [teacherId], references: [id])
+  
+  title         String
+  description   String
+  attachmentUrl String?
+  dueDate       DateTime
+  maxPoints     Int      @default(100)
+  status        HomeworkStatus @default(ACTIVE)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  submissions   HomeworkSubmission[]
+}
+
+model HomeworkSubmission {
+  id            String   @id @default(cuid())
+  homeworkId    String
+  homework      Homework @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+  studentId     String
+  student       Student  @relation(fields: [studentId], references: [id])
+  
+  content       String?
+  attachmentUrl String?
+  submittedAt   DateTime @default(now())
+  
+  points        Int?
+  feedback      String?
+  gradedAt      DateTime?
+  gradedById    String?
+  status        SubmissionStatus @default(SUBMITTED)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@unique([homeworkId, studentId])
+}
+
+enum HomeworkStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+  CANCELLED
+}
+
+enum SubmissionStatus {
+  SUBMITTED
+  LATE
+  GRADED
+  RETURNED
+}
+
+// ============================================
+// ADMISSION APPLICATIONS
+// ============================================
+
+model AdmissionApplication {
+  id              String   @id @default(cuid())
+  branchId        String
+  branch          Branch   @relation(fields: [branchId], references: [id])
+  
+  // Student Info
+  studentName     String
+  dateOfBirth     DateTime
+  gender          Gender
+  bloodGroup      String?
+  religion        String?
+  nationality     String   @default("Bangladeshi")
+  address         String
+  
+  // Guardian Info
+  guardianName    String
+  guardianRelation String
+  guardianPhone   String
+  guardianEmail   String?
+  guardianOccupation String?
+  
+  // Academic Info
+  previousSchool  String?
+  previousClass   String?
+  applyingForClass String
+  
+  // Documents
+  birthCertificateUrl String?
+  photoUrl        String?
+  
+  // Status
+  status          AdmissionStatus @default(PENDING)
+  reviewNotes     String?
+  reviewedById    String?
+  reviewedAt      DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum AdmissionStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  ENROLLED
+}
+
+// ============================================
+// LIBRARY MANAGEMENT
+// ============================================
+
+model BookCategory {
+  id          String   @id @default(cuid())
+  branchId    String
+  branch      Branch   @relation(fields: [branchId], references: [id])
+  
+  name        String
+  description String?
+  
+  books       Book[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([branchId, name])
+}
+
+model Book {
+  id          String   @id @default(cuid())
+  branchId    String
+  branch      Branch   @relation(fields: [branchId], references: [id])
+  categoryId  String?
+  category    BookCategory? @relation(fields: [categoryId], references: [id])
+  
+  title       String
+  author      String
+  isbn        String?
+  publisher   String?
+  publishYear Int?
+  quantity    Int      @default(1)
+  available   Int      @default(1)
+  location    String?  // Shelf/Row location
+  coverUrl    String?
+  
+  issues      BookIssue[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model BookIssue {
+  id          String   @id @default(cuid())
+  bookId      String
+  book        Book     @relation(fields: [bookId], references: [id])
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id])
+  
+  issuedById  String   // Staff/Librarian who issued
+  issueDate   DateTime @default(now())
+  dueDate     DateTime
+  returnDate  DateTime?
+  status      BookIssueStatus @default(ISSUED)
+  fine        Float?   // Overdue fine
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum BookIssueStatus {
+  ISSUED
+  RETURNED
+  OVERDUE
+  LOST
+}
+
+// ============================================
+// TRANSPORT MANAGEMENT
+// ============================================
+
+model TransportRoute {
+  id          String   @id @default(cuid())
+  branchId    String
+  branch      Branch   @relation(fields: [branchId], references: [id])
+  
+  name        String   // e.g., "Route A - North Zone"
+  description String?
+  startPoint  String   // Start location
+  endPoint    String   // End location (usually school)
+  stops       String?  // JSON array of stops or comma-separated
+  distance    Float?   // in km
+  duration    Int?     // estimated duration in minutes
+  fare        Float?   // monthly transport fee
+  isActive    Boolean  @default(true)
+  
+  vehicle     Vehicle?
+  students    StudentTransport[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([branchId, name])
+}
+
+model Vehicle {
+  id            String   @id @default(cuid())
+  branchId      String
+  branch        Branch   @relation(fields: [branchId], references: [id])
+  routeId       String?  @unique
+  route         TransportRoute? @relation(fields: [routeId], references: [id])
+  
+  registrationNo String
+  type          VehicleType @default(BUS)
+  capacity      Int
+  driverName    String
+  driverPhone   String
+  driverLicense String?
+  helperName    String?
+  helperPhone   String?
+  insuranceExpiry DateTime?
+  fitnessExpiry DateTime?
+  isActive      Boolean  @default(true)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@unique([branchId, registrationNo])
+}
+
+enum VehicleType {
+  BUS
+  MINIBUS
+  VAN
+  MICROBUS
+}
+
+model StudentTransport {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id])
+  routeId     String
+  route       TransportRoute @relation(fields: [routeId], references: [id])
+  
+  pickupPoint String   // where student boards
+  dropPoint   String?  // where student drops (if different from pickup)
+  startDate   DateTime @default(now())
+  endDate     DateTime?
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([studentId, routeId])
+}
+
+// ============================================
+// EVENTS & CALENDAR
+// ============================================
+
+model Event {
+  id            String   @id @default(cuid())
+  branchId      String
+  branch        Branch   @relation(fields: [branchId], references: [id])
+  
+  title         String
+  description   String?
+  eventType     EventType @default(GENERAL)
+  location      String?
+  startDate     DateTime
+  endDate       DateTime?
+  allDay        Boolean  @default(false)
+  color         String?  // For calendar display
+  isPublic      Boolean  @default(true)
+  maxAttendees  Int?
+  requiresRegistration Boolean @default(false)
+  
+  registrations EventRegistration[]
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum EventType {
+  GENERAL
+  HOLIDAY
+  EXAM
+  MEETING
+  SPORTS
+  CULTURAL
+  PARENT_MEETING
+  ASSEMBLY
+}
+
+model EventRegistration {
+  id          String   @id @default(cuid())
+  eventId     String
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  studentId   String?
+  student     Student? @relation(fields: [studentId], references: [id])
+  guardianId  String?
+  guardian    Guardian? @relation(fields: [guardianId], references: [id])
+  
+  status      RegistrationStatus @default(REGISTERED)
+  notes       String?
+  
+  createdAt   DateTime @default(now())
+  
+  @@unique([eventId, studentId])
+}
+
+enum RegistrationStatus {
+  REGISTERED
+  ATTENDED
+  CANCELLED
+}
