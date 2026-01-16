@@ -16,16 +16,17 @@ async function getTeacher(id: string) {
     });
 }
 
-export default async function TeacherSubjectsPage({ params }: { params: { id: string } }) {
+export default async function TeacherSubjectsPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
     if (!session) redirect('/auth/login');
 
+    const { id } = await params;
     const branchId = session.user.branchId || await getFirstBranch();
     if (!branchId) return <div>No branch found</div>;
 
     const [teacher, assignedSubjects, availableSubjects] = await Promise.all([
-        getTeacher(params.id),
-        getTeacherSubjects(params.id),
+        getTeacher(id),
+        getTeacherSubjects(id),
         getAvailableSubjects(branchId),
     ]);
 
@@ -40,7 +41,7 @@ export default async function TeacherSubjectsPage({ params }: { params: { id: st
             {/* Header */}
             <div className="mb-6">
                 <Link
-                    href={`/admin/teachers/${params.id}`}
+                    href={`/admin/teachers/${id}`}
                     className="text-blue-600 hover:underline text-sm mb-2 inline-block"
                 >
                     ← Back to Teacher Profile
@@ -53,7 +54,7 @@ export default async function TeacherSubjectsPage({ params }: { params: { id: st
 
             {/* Assignment Form */}
             <SubjectAssignmentForm
-                teacherId={params.id}
+                teacherId={id}
                 assignedSubjects={assignedSubjects}
                 availableSubjects={unassignedSubjects}
             />

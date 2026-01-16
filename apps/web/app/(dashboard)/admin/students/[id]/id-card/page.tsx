@@ -25,18 +25,19 @@ async function getStudent(id: string) {
     });
 }
 
-export default async function StudentIDCardPage({ params }: { params: { id: string } }) {
+export default async function StudentIDCardPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
     if (!session) redirect('/auth/login');
 
-    const student = await getStudent(params.id);
+    const { id } = await params;
+    const student = await getStudent(id);
     if (!student) notFound();
 
     return (
         <div className="p-6">
             <div className="mb-6">
                 <Link
-                    href={`/admin/students/${params.id}`}
+                    href={`/admin/students/${id}`}
                     className="flex items-center gap-2 text-blue-600 hover:underline text-sm mb-2"
                 >
                     <ArrowLeft className="w-4 h-4" />

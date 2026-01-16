@@ -8,17 +8,18 @@ import HomeworkTable from './homework-table';
 export default async function HomeworkPage({
     searchParams,
 }: {
-    searchParams: { page?: string; classId?: string; status?: string };
+    searchParams: Promise<{ page?: string; classId?: string; status?: string }>;
 }) {
     const session = await auth();
     if (!session) redirect('/auth/login');
 
+    const params = await searchParams;
     const branchId = session.user.branchId || await getFirstBranch();
     if (!branchId) return <div>No branch found</div>;
 
-    const page = Number(searchParams.page) || 1;
-    const classId = searchParams.classId;
-    const status = searchParams.status as any;
+    const page = Number(params.page) || 1;
+    const classId = params.classId;
+    const status = params.status as any;
 
     const [homeworkData, classes] = await Promise.all([
         getHomeworks({

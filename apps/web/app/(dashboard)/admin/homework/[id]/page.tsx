@@ -5,11 +5,12 @@ import { auth } from '@/lib/auth';
 import { getHomework } from '../actions';
 import SubmissionsTable from './submissions-table';
 
-export default async function HomeworkViewPage({ params }: { params: { id: string } }) {
+export default async function HomeworkViewPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
     if (!session) redirect('/auth/login');
 
-    const homework = await getHomework(params.id);
+    const { id } = await params;
+    const homework = await getHomework(id);
     if (!homework) notFound();
 
     const formatDate = (date: Date) => {

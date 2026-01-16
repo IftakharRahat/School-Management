@@ -36,6 +36,8 @@ export default function AnnouncementForm() {
 
         const result = await createAnnouncement({
             ...form,
+            type: form.type as 'GENERAL' | 'EXAM' | 'EVENT' | 'HOLIDAY' | 'EMERGENCY',
+            priority: form.priority as 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT',
             endDate: form.endDate || null,
         });
 

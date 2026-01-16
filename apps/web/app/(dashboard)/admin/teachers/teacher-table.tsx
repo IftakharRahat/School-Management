@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 interface Teacher {
     id: string;
     employeeId: string;
-    designation: string;
+    designation: string | null;
     department: string | null;
     qualification: string | null;
     specialization: string | null;

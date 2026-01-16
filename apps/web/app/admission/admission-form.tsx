@@ -19,7 +19,7 @@ export default function AdmissionForm({ branches }: { branches: Branch[] }) {
         branchId: branches[0]?.id || '',
         studentName: '',
         dateOfBirth: '',
-        gender: 'MALE',
+        gender: 'MALE' as 'MALE' | 'FEMALE' | 'OTHER',
         bloodGroup: '',
         religion: '',
         address: '',
@@ -138,7 +138,7 @@ export default function AdmissionForm({ branches }: { branches: Branch[] }) {
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Gender *</label>
                                 <select
                                     value={form.gender}
-                                    onChange={(e) => setForm({ ...form, gender: e.target.value })}
+                                    onChange={(e) => setForm({ ...form, gender: e.target.value as 'MALE' | 'FEMALE' | 'OTHER' })}
                                     className="w-full border border-slate-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500"
                                     required
                                 >

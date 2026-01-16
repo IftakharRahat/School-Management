@@ -1,33 +1,31 @@
 import { redirect } from 'next/navigation';
 import { Calendar } from 'lucide-react';
 import { auth } from '@/lib/auth';
-import { getFirstBranch } from '../homework/actions'; // Reuse existing
+import { getFirstBranch } from '../homework/actions';
 import { getTimetableMasterData, getTimetable } from './actions';
 import TimetableGrid from './timetable-grid';
+import ClientSelector from './client-selector';
 
 export default async function TimetablePage({
     searchParams,
 }: {
-    searchParams: { classId?: string; sectionId?: string };
+    searchParams: Promise<{ classId?: string; sectionId?: string }>;
 }) {
     const session = await auth();
     if (!session) redirect('/auth/login');
 
+    const params = await searchParams;
     const branchId = session.user.branchId || await getFirstBranch();
     if (!branchId) return <div>No branch found</div>;
 
     const { classes, teachers, subjects } = await getTimetableMasterData(branchId);
 
     let timetable: any[] = [];
-    if (searchParams.sectionId) {
-        timetable = await getTimetable(searchParams.sectionId);
+    if (params.sectionId) {
+        timetable = await getTimetable(params.sectionId);
     }
 
-    // Helper to preserve selection state in UI
-    // We pass data to a Client Component which handles interactions
-    // But since we want URL state, we render the grid directly if data exists
-
-    const activeClass = classes.find(c => c.id === searchParams.classId);
+    const activeClass = classes.find(c => c.id === params.classId);
 
     return (
         <div className="p-6 max-w-[1600px] mx-auto">
@@ -39,32 +37,14 @@ export default async function TimetablePage({
                 <p className="text-slate-500">Manage weekly schedules for classes</p>
             </div>
 
-            {/* Selection Area - Using simple form or links for server-side simplicity? 
-                Actually, let's use a Client Component for the dropdowns that pushes URL */}
             <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-6">
-                <form className="flex flex-wrap gap-4 items-end">
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Class</label>
-                        <select
-                            name="classId"
-                            defaultValue={searchParams.classId}
-                            className="w-48 p-2.5 border border-slate-200 rounded-lg text-sm"
-                        // Simple onchange submit via JS or just rely on user hitting a button? 
-                        // For best UX in Server Components, client nav is better. 
-                        // But for rapid dev, let's embed a quick script or Client Component.
-                        >
-                            {/* This is just static HTML, we need the Client Component for interactivity */}
-                        </select>
-                    </div>
-                </form>
-                {/* Replacing above form with the Client Component */}
-                <ClientSelector classes={classes} selectedClassId={searchParams.classId} selectedSectionId={searchParams.sectionId} />
+                <ClientSelector classes={classes} selectedClassId={params.classId} selectedSectionId={params.sectionId} />
             </div>
 
-            {searchParams.sectionId && activeClass ? (
+            {params.sectionId && activeClass ? (
                 <TimetableGrid
-                    classId={searchParams.classId!}
-                    sectionId={searchParams.sectionId}
+                    classId={params.classId!}
+                    sectionId={params.sectionId}
                     slots={timetable}
                     teachers={teachers}
                     subjects={subjects}
@@ -79,6 +59,3 @@ export default async function TimetablePage({
         </div>
     );
 }
-
-// Optimization: Inline Client Component for the selector to avoid file sprawl if it's small
-import ClientSelector from './client-selector';

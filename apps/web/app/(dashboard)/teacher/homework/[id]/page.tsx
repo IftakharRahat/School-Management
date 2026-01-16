@@ -105,9 +105,9 @@ export default async function HomeworkDetailPage({ params }: Props) {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            {sub.grade !== null ? (
+                                            {sub.points !== null ? (
                                                 <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                                                    Grade: {sub.grade}
+                                                    Points: {sub.points}
                                                 </span>
                                             ) : (
                                                 <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">
@@ -152,13 +152,13 @@ export default async function HomeworkDetailPage({ params }: Props) {
                         <div className="grid grid-cols-2 gap-3 text-center">
                             <div className="bg-white rounded-lg p-3">
                                 <div className="text-2xl font-bold text-green-600">
-                                    {homework.submissions.filter(s => s.grade !== null).length}
+                                    {homework.submissions.filter(s => s.points !== null).length}
                                 </div>
                                 <div className="text-xs text-slate-500">Graded</div>
                             </div>
                             <div className="bg-white rounded-lg p-3">
                                 <div className="text-2xl font-bold text-yellow-600">
-                                    {homework.submissions.filter(s => s.grade === null).length}
+                                    {homework.submissions.filter(s => s.points === null).length}
                                 </div>
                                 <div className="text-xs text-slate-500">Pending</div>
                             </div>

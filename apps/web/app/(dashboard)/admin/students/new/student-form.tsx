@@ -52,12 +52,12 @@ export default function StudentForm({ classes, guardians, branchId, tenantId, in
             dateOfBirth: formData.get('dateOfBirth') as string || null,
             gender: formData.get('gender') as 'MALE' | 'FEMALE' | 'OTHER',
             bloodGroup: formData.get('bloodGroup') as string || null,
-            address: formData.get('address') as string || null,
+            address: formData.get('address') as string || '',
             admissionNo: formData.get('admissionNo') as string,
             admissionDate: formData.get('admissionDate') as string,
             classId: formData.get('classId') as string,
             sectionId: formData.get('sectionId') as string,
-            guardianId: formData.get('guardianId') as string || null,
+            guardianId: formData.get('guardianId') as string || undefined,
         };
 
         try {

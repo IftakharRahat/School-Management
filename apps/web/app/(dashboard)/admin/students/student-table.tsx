@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 interface Student {
     id: string;
     admissionNo: string;
-    dateOfBirth: string | null;
+    dateOfBirth: Date | null;
     gender: string | null;
     bloodGroup: string | null;
     user: {

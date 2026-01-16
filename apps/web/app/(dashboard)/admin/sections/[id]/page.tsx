@@ -31,15 +31,16 @@ async function getSectionWithTeacher(sectionId: string) {
     });
 }
 
-export default async function SectionPage({ params }: { params: { id: string } }) {
+export default async function SectionPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
     if (!session) redirect('/auth/login');
 
+    const { id } = await params;
     const branchId = session.user.branchId || await getFirstBranch();
     if (!branchId) return <div>No branch found</div>;
 
     const [section, teachers, availableStudents, academicYear] = await Promise.all([
-        getSectionWithTeacher(params.id),
+        getSectionWithTeacher(id),
         getTeachersForDropdown(branchId),
         getAvailableStudentsForEnrollment(branchId),
         getCurrentAcademicYear(branchId),

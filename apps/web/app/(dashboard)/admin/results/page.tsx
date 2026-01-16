@@ -8,18 +8,21 @@ import { getExamsForResults, getClassResultSummary } from './actions';
 export default async function AdminResultsPage({
     searchParams
 }: {
-    searchParams: { examId?: string; sectionId?: string }
+    searchParams: Promise<{ examId?: string; sectionId?: string }>
 }) {
     const session = await auth();
     if (!session) redirect('/auth/login');
 
+    const params = await searchParams;
     const branchId = session.user.branchId || await getFirstBranch();
+    if (!branchId) return <div>No branch found</div>;
+
     const exams = await getExamsForResults(branchId);
 
-    const selectedExamId = searchParams.examId || (exams[0]?.id);
+    const selectedExamId = params.examId || (exams[0]?.id) || '';
     const selectedExam = exams.find(e => e.id === selectedExamId);
 
-    const students = selectedExamId ? await getClassResultSummary(selectedExamId, searchParams.sectionId) : [];
+    const students = selectedExamId ? await getClassResultSummary(selectedExamId, params.sectionId) : [];
 
     // Stats
     const totalStudents = students.length;

@@ -37,16 +37,16 @@ export default async function EditStudentPage({ params }: PageProps) {
         firstName: nameParts[0],
         lastName: nameParts.slice(1).join(' '),
         email: student.user.email,
-        phone: student.user.phone,
-        dateOfBirth: student.dateOfBirth ? student.dateOfBirth.toISOString().split('T')[0] : null,
-        gender: student.gender,
-        bloodGroup: student.bloodGroup,
-        address: student.address,
+        phone: student.user.phone || '',
+        dateOfBirth: student.dateOfBirth ? student.dateOfBirth.toISOString().split('T')[0] : '',
+        gender: student.gender || undefined,
+        bloodGroup: student.bloodGroup || '',
+        address: student.address || '',
         admissionNo: student.admissionNo,
         admissionDate: student.admissionDate.toISOString().split('T')[0],
         classId: currentEnrollment?.section?.class?.id || '',
         sectionId: currentEnrollment?.sectionId || '',
-        guardianId: student.guardians[0]?.guardianId || null,
+        guardianId: student.guardians[0]?.guardianId || '',
     };
 
     return (

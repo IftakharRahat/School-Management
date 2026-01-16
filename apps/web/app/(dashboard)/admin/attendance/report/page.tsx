@@ -9,11 +9,12 @@ import ReportFilter from './report-filter';
 export default async function AttendanceReportPage({
     searchParams,
 }: {
-    searchParams: { classId?: string; sectionId?: string; month?: string; year?: string };
+    searchParams: Promise<{ classId?: string; sectionId?: string; month?: string; year?: string }>;
 }) {
     const session = await auth();
     if (!session) redirect('/auth/login');
 
+    const params = await searchParams;
     const branchId = session.user.branchId || await getFirstBranch();
     if (!branchId) return <div>No branch found</div>;
 
@@ -21,11 +22,11 @@ export default async function AttendanceReportPage({
 
     // Default to current month/year
     const now = new Date();
-    const month = searchParams.month ? parseInt(searchParams.month) : now.getMonth() + 1;
-    const year = searchParams.year ? parseInt(searchParams.year) : now.getFullYear();
+    const month = params.month ? parseInt(params.month) : now.getMonth() + 1;
+    const year = params.year ? parseInt(params.year) : now.getFullYear();
 
-    const reportData = (searchParams.classId && searchParams.sectionId)
-        ? await getMonthlyAttendanceReport(branchId, searchParams.classId, searchParams.sectionId, month, year)
+    const reportData = (params.classId && params.sectionId)
+        ? await getMonthlyAttendanceReport(branchId, params.classId, params.sectionId, month, year)
         : [];
 
     const daysInMonth = new Date(year, month, 0).getDate();
@@ -44,14 +45,14 @@ export default async function AttendanceReportPage({
             <div className="mb-6 print:hidden">
                 <ReportFilter
                     classes={classes}
-                    selectedClassId={searchParams.classId}
-                    selectedSectionId={searchParams.sectionId}
+                    selectedClassId={params.classId}
+                    selectedSectionId={params.sectionId}
                     selectedMonth={month}
                     selectedYear={year}
                 />
             </div>
 
-            {searchParams.sectionId && reportData.length > 0 ? (
+            {params.sectionId && reportData.length > 0 ? (
                 <div className="bg-white rounded-lg border border-slate-200 overflow-x-auto print:border-none print:shadow-none">
                     {/* Print Header */}
                     <div className="hidden print:block mb-4 text-center">

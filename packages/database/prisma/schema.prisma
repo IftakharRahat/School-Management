@@ -319,6 +319,7 @@ model Subject {
   assignments       SubjectAssignment[]
   timetableSlots    TimetableSlot[]
   examSubjects      ExamSubject[]
+  results           Result[]
   homework          Homework[]
 }
 
@@ -474,6 +475,7 @@ model Result {
   student     Student  @relation(fields: [studentId], references: [id])
   
   subjectId   String
+  subject     Subject  @relation(fields: [subjectId], references: [id])
   marksObtained Float
   grade       String?
   gradePoint  Float?

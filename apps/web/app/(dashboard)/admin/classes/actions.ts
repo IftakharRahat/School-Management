@@ -231,7 +231,7 @@ export async function enrollStudent(studentId: string, sectionId: string, academ
 export async function unenrollStudent(enrollmentId: string) {
     await prisma.enrollment.update({
         where: { id: enrollmentId },
-        data: { status: 'INACTIVE' },
+        data: { status: 'DROPPED' },
     });
 
     revalidatePath('/admin/classes');

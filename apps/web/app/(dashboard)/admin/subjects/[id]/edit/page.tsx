@@ -3,15 +3,16 @@ import { auth } from '@/lib/auth';
 import { getFirstBranch, getSubject, getClassesForSubject } from '../../actions';
 import SubjectForm from '../../subject-form';
 
-export default async function EditSubjectPage({ params }: { params: { id: string } }) {
+export default async function EditSubjectPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
     if (!session) redirect('/auth/login');
 
+    const { id } = await params;
     const branchId = session.user.branchId || await getFirstBranch();
     if (!branchId) return <div>No branch found</div>;
 
     const [subject, classes] = await Promise.all([
-        getSubject(params.id),
+        getSubject(id),
         getClassesForSubject(branchId),
     ]);
 

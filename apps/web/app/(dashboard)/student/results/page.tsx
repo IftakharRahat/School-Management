@@ -4,14 +4,15 @@ import { auth } from '@/lib/auth';
 import { getStudentExams, getStudentResult } from './actions';
 import StudentResultView from './student-result-view';
 
-export default async function StudentResultPage({ searchParams }: { searchParams: { examId?: string } }) {
+export default async function StudentResultPage({ searchParams }: { searchParams: Promise<{ examId?: string }> }) {
     const session = await auth();
     if (!session) redirect('/auth/login');
     if (session.user.role !== 'STUDENT') return <div>Access Denied</div>;
 
+    const params = await searchParams;
     const exams = await getStudentExams();
     const defaultExamId = exams.length > 0 ? exams[0].id : '';
-    const examId = searchParams.examId || defaultExamId;
+    const examId = params.examId || defaultExamId;
 
     const result = examId ? await getStudentResult(examId) : null;
 

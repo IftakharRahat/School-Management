@@ -5,14 +5,15 @@ import { auth } from '@/lib/auth';
 import { getExamDetails, getExamSubjects } from './actions';
 import MarksEntry from './marks-entry';
 
-export default async function ExamMarksPage({ params }: { params: { id: string } }) {
+export default async function ExamMarksPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
     if (!session) redirect('/auth/login');
 
-    const exam = await getExamDetails(params.id);
+    const { id } = await params;
+    const exam = await getExamDetails(id);
     if (!exam) return <div>Exam not found</div>;
 
-    const subjects = await getExamSubjects(params.id);
+    const subjects = await getExamSubjects(id);
 
     return (
         <div className="p-6 max-w-[1200px] mx-auto">

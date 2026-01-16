@@ -14,14 +14,15 @@ async function getStudentId(userId: string) {
     return student?.id;
 }
 
-export default async function HomeworkDetailPage({ params }: { params: { id: string } }) {
+export default async function HomeworkDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
     if (!session || session.user.role !== 'STUDENT') redirect('/auth/login');
 
+    const { id } = await params;
     const studentId = await getStudentId(session.user.id);
     if (!studentId) return <div>Student profile not found</div>;
 
-    const homework = await getHomework(params.id);
+    const homework = await getHomework(id);
     if (!homework) notFound();
 
     // Get student's submission

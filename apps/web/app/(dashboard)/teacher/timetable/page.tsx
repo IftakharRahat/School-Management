@@ -34,10 +34,14 @@ export default async function TeacherTimetablePage() {
         THURSDAY: 'Thursday', FRIDAY: 'Friday', SATURDAY: 'Saturday'
     };
 
+    const dayMap: Record<string, number> = {
+        MONDAY: 1, TUESDAY: 2, WEDNESDAY: 3, THURSDAY: 4, FRIDAY: 5, SATURDAY: 6, SUNDAY: 0
+    };
+
     const slotsByDay = days.map(day => ({
         day,
         label: dayLabels[day],
-        slots: slots.filter(s => s.dayOfWeek === day)
+        slots: slots.filter(s => s.dayOfWeek === dayMap[day])
     }));
 
     return (

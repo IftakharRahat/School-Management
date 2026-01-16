@@ -5,11 +5,12 @@ import { auth } from '@/lib/auth';
 import { getStudentResultCard } from '../../actions';
 import PrintButton from './print-button';
 
-export default async function AdminResultCardPage({ params }: { params: { examId: string; studentId: string } }) {
+export default async function AdminResultCardPage({ params }: { params: Promise<{ examId: string; studentId: string }> }) {
     const session = await auth();
     if (!session) redirect('/auth/login');
 
-    const result = await getStudentResultCard(params.examId, params.studentId);
+    const { examId, studentId } = await params;
+    const result = await getStudentResultCard(examId, studentId);
 
     if (!result) return <div>Result not found</div>;
 
@@ -17,7 +18,7 @@ export default async function AdminResultCardPage({ params }: { params: { examId
         <div className="p-6 max-w-[1000px] mx-auto print:p-0 font-sans">
             {/* Nav (Hidden in print) */}
             <div className="mb-6 flex justify-between items-center print:hidden">
-                <Link href={`/admin/results?examId=${params.examId}`} className="text-slate-500 hover:text-slate-900 flex items-center gap-1 text-sm font-medium">
+                <Link href={`/admin/results?examId=${examId}`} className="text-slate-500 hover:text-slate-900 flex items-center gap-1 text-sm font-medium">
                     <ArrowLeft size={16} />
                     Back to Results
                 </Link>

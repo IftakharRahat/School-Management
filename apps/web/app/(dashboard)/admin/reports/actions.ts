@@ -70,6 +70,13 @@ export async function getStudentResults(examId: string, sectionId?: string) {
         }
     });
 
+    // Get full marks for each subject
+    const examSubjects = await prisma.examSubject.findMany({
+        where: { examId },
+        select: { subjectId: true, fullMarks: true }
+    });
+    const subjectMarksMap = new Map(examSubjects.map(es => [es.subjectId, es.fullMarks]));
+
     // Group by student
     const studentResults = new Map();
 
@@ -88,7 +95,7 @@ export async function getStudentResults(examId: string, sectionId?: string) {
         studentResults.get(result.studentId).results.push({
             subject: result.subject.name,
             marks: result.marksObtained,
-            total: result.totalMarks,
+            total: subjectMarksMap.get(result.subjectId) || 100,
             grade: result.grade
         });
     });
@@ -212,7 +219,7 @@ export async function getAttendanceAnalytics() {
             student: {
                 select: {
                     id: true,
-                    name: true,
+                    user: { select: { name: true } },
                     admissionNo: true,
                     enrollments: {
                         where: { status: 'ACTIVE' },
@@ -232,12 +239,14 @@ export async function getAttendanceAnalytics() {
 
     const studentStats = new Map();
     monthlyAttendance.forEach(record => {
+        if (!record.student) return;
+
         if (!studentStats.has(record.studentId)) {
-            const enrollment = record.student?.enrollments[0];
+            const enrollment = record.student.enrollments[0];
             const className = enrollment?.section?.class?.name || 'Unknown';
 
             studentStats.set(record.studentId, {
-                name: record.student.name,
+                name: record.student.user.name,
                 class: className,
                 admissionNo: record.student.admissionNo,
                 total: 0,

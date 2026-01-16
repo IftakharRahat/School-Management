@@ -9,16 +9,17 @@ import StaffTable from './staff-table';
 export default async function StaffPage({
     searchParams,
 }: {
-    searchParams: { page?: string; search?: string }
+    searchParams: Promise<{ page?: string; search?: string }>
 }) {
     const session = await auth();
     if (!session) redirect('/auth/login');
 
+    const params = await searchParams;
     const branchId = session.user.branchId || await getFirstBranch();
     if (!branchId) return <div>No branch found</div>;
 
-    const page = Number(searchParams.page) || 1;
-    const search = searchParams.search || '';
+    const page = Number(params.page) || 1;
+    const search = params.search || '';
 
     const { staffs, pagination } = await getStaffs({
         page,

@@ -10,18 +10,19 @@ import AttendanceSheet from './attendance-sheet';
 export default async function AttendancePage({
     searchParams,
 }: {
-    searchParams: { classId?: string; sectionId?: string; date?: string };
+    searchParams: Promise<{ classId?: string; sectionId?: string; date?: string }>;
 }) {
     const session = await auth();
     if (!session) redirect('/auth/login');
 
+    const params = await searchParams;
     const branchId = session.user.branchId || await getFirstBranch();
     if (!branchId) return <div>No branch found</div>;
 
     const classes = await getAttendanceMasterData(branchId);
 
     // Default to today if date not provided
-    const dateStr = searchParams.date || new Date().toISOString().split('T')[0];
+    const dateStr = params.date || new Date().toISOString().split('T')[0];
     const dateObj = new Date(dateStr);
 
     return (
@@ -47,17 +48,17 @@ export default async function AttendancePage({
             <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-6">
                 <ClientFilter
                     classes={classes}
-                    selectedClassId={searchParams.classId}
-                    selectedSectionId={searchParams.sectionId}
+                    selectedClassId={params.classId}
+                    selectedSectionId={params.sectionId}
                     selectedDate={dateStr}
                 />
             </div>
 
             {/* Main Content */}
-            {searchParams.sectionId ? (
+            {params.sectionId ? (
                 <AttendanceSheet
-                    classId={searchParams.classId!}
-                    sectionId={searchParams.sectionId}
+                    classId={params.classId!}
+                    sectionId={params.sectionId}
                     date={dateObj}
                 />
             ) : (

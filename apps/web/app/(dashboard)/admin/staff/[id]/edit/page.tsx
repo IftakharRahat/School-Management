@@ -12,14 +12,15 @@ async function getStaff(id: string) {
     return staff;
 }
 
-export default async function EditStaffPage({ params }: { params: { id: string } }) {
+export default async function EditStaffPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
     if (!session) redirect('/auth/login');
 
+    const { id } = await params;
     const branchId = session.user.branchId || await getFirstBranch();
     if (!branchId) return <div>No branch found</div>;
 
-    const staff = await getStaff(params.id);
+    const staff = await getStaff(id);
     if (!staff) notFound();
 
     // Transform to form data structure

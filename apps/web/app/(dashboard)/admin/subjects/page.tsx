@@ -9,19 +9,20 @@ import SubjectTable from './subject-table';
 export default async function SubjectsPage({
     searchParams,
 }: {
-    searchParams: { search?: string; classId?: string }
+    searchParams: Promise<{ search?: string; classId?: string }>
 }) {
     const session = await auth();
     if (!session) redirect('/auth/login');
 
+    const params = await searchParams;
     const branchId = session.user.branchId || await getFirstBranch();
     if (!branchId) return <div>No branch found</div>;
 
     const [subjects, classes] = await Promise.all([
         getSubjects({
             branchId,
-            classId: searchParams.classId,
-            search: searchParams.search,
+            classId: params.classId,
+            search: params.search,
         }),
         getClassesForSubject(branchId),
     ]);
@@ -53,14 +54,14 @@ export default async function SubjectsPage({
                                 type="text"
                                 name="search"
                                 placeholder="Search subjects..."
-                                defaultValue={searchParams.search}
+                                defaultValue={params.search}
                                 className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
                     </div>
                     <select
                         name="classId"
-                        defaultValue={searchParams.classId}
+                        defaultValue={params.classId}
                         className="px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                         <option value="">All Classes</option>
