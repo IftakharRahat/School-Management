@@ -3,6 +3,8 @@ import { auth } from '@/lib/auth';
 import { getFirstBranch } from '../actions';
 import StaffForm from '../staff-form';
 
+export const dynamic = 'force-dynamic';
+
 export default async function NewStaffPage() {
     const session = await auth();
     if (!session) redirect('/auth/login');
