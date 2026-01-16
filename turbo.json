@@ -26,5 +26,12 @@
         "db:push": {
             "cache": false
         }
-    }
+    },
+    "globalEnv": [
+        "DATABASE_URL",
+        "AUTH_SECRET",
+        "NEXTAUTH_URL",
+        "NEXTAUTH_SECRET",
+        "AUTH_TRUST_HOST"
+    ]
 }
