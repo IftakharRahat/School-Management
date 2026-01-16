@@ -25,7 +25,18 @@ export default async function NewStudentPage() {
             </div>
 
             {/* Form */}
-            <StudentForm classes={classes} guardians={guardians} branchId={branchId} tenantId={tenantId} />
+            <StudentForm
+                classes={classes}
+                guardians={guardians.map(g => ({
+                    id: g.id,
+                    user: {
+                        name: g.user.name,
+                        phone: g.user.phone
+                    }
+                }))}
+                branchId={branchId}
+                tenantId={tenantId}
+            />
         </div>
     );
 }

@@ -134,7 +134,42 @@ export default async function StudentsPage({ searchParams }: PageProps) {
             {/* Student Table */}
             <Suspense fallback={<div className="bg-white rounded-2xl p-8 text-center">Loading...</div>}>
                 <StudentTable
-                    students={studentsData.students}
+                    students={studentsData.students.map(s => ({
+                        ...s,
+                        user: { ...s.user, createdAt: s.user.createdAt.toISOString(), updatedAt: s.user.updatedAt.toISOString() },
+                        createdAt: s.createdAt.toISOString(),
+                        updatedAt: s.updatedAt.toISOString(),
+                        admissionDate: s.admissionDate.toISOString(),
+                        dateOfBirth: s.dateOfBirth?.toISOString() || null,
+                        enrollments: s.enrollments.map(e => ({
+                            ...e,
+                            createdAt: e.createdAt.toISOString(),
+                            updatedAt: e.updatedAt.toISOString(),
+                            section: {
+                                ...e.section,
+                                createdAt: e.section.createdAt.toISOString(),
+                                updatedAt: e.section.updatedAt.toISOString(),
+                                class: {
+                                    ...e.section.class,
+                                    createdAt: e.section.class.createdAt.toISOString(),
+                                    updatedAt: e.section.class.updatedAt.toISOString(),
+                                }
+                            }
+                        })),
+                        guardians: s.guardians.map(sg => ({
+                            ...sg,
+                            guardian: {
+                                ...sg.guardian,
+                                createdAt: sg.guardian.createdAt.toISOString(),
+                                updatedAt: sg.guardian.updatedAt.toISOString(),
+                                user: {
+                                    ...sg.guardian.user,
+                                    createdAt: sg.guardian.user.createdAt.toISOString(),
+                                    updatedAt: sg.guardian.user.updatedAt.toISOString(),
+                                }
+                            }
+                        }))
+                    })) as any} // Temporary cast as we fix types next
                     pagination={studentsData.pagination}
                 />
             </Suspense>
