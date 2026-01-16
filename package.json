@@ -6,7 +6,8 @@
         "build": "turbo build",
         "lint": "turbo lint",
         "db:generate": "turbo db:generate",
-        "db:push": "turbo db:push"
+        "db:push": "turbo db:push",
+        "postinstall": "turbo db:generate"
     },
     "devDependencies": {
         "turbo": "^2.3.0"
