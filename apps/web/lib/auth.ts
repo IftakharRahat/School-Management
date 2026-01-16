@@ -4,12 +4,15 @@ import { prisma } from '@repo/database';
 import { compare } from 'bcryptjs';
 import { z } from 'zod';
 
+import { authConfig } from './auth.config';
+
 const loginSchema = z.object({
     email: z.string().email(),
     password: z.string().min(6),
 });
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+    ...authConfig,
     providers: [
         Credentials({
             name: 'credentials',
@@ -59,34 +62,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             },
         }),
     ],
-    pages: {
-        signIn: '/login',
-        error: '/login',
-    },
-    session: {
-        strategy: 'jwt',
-        maxAge: 7 * 24 * 60 * 60, // 7 days
-    },
-    callbacks: {
-        async jwt({ token, user }) {
-            if (user) {
-                token.id = user.id;
-                token.role = user.role;
-                token.type = user.type;
-                token.tenantId = user.tenantId;
-                token.branchId = user.branchId;
-            }
-            return token;
-        },
-        async session({ session, token }) {
-            if (token) {
-                session.user.id = token.id as string;
-                session.user.role = token.role as any;
-                session.user.type = token.type as any;
-                session.user.tenantId = token.tenantId as string;
-                session.user.branchId = token.branchId as string | null;
-            }
-            return session;
-        },
-    },
 });
