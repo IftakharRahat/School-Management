@@ -2,6 +2,8 @@ import { getFirstBranch } from '../actions';
 import GuardianForm from '../guardian-form';
 import { auth } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 interface PageProps {
     searchParams: Promise<{ returnTo?: string }>;
 }

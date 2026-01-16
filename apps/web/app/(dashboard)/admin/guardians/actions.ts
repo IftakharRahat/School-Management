@@ -7,10 +7,15 @@ import { z } from 'zod';
 
 // Get first branch ID (fallback when no session)
 export async function getFirstBranch(): Promise<string | null> {
-    const branch = await prisma.branch.findFirst({
-        orderBy: { createdAt: 'asc' },
-    });
-    return branch?.id || null;
+    try {
+        const branch = await prisma.branch.findFirst({
+            orderBy: { createdAt: 'asc' },
+        });
+        return branch?.id || null;
+    } catch (error) {
+        console.error('getFirstBranch error:', error);
+        return null;
+    }
 }
 
 // Validation schemas
